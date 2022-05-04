@@ -37,6 +37,9 @@ jobs:
       - name: Install ionic cli
         run: sudo npm install -g @ionic/cli
 
+      - name: Clear npm cache
+        run: sudo npm cache clean --force 
+
       # Install npm packages
       - name: Install npm packages
         run: npm install
