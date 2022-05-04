@@ -1,0 +1,55 @@
+name: Lighthouse audit
+env:
+  LINK: 'https://pharmacy-pwa-demo.web.app/'
+on: 
+  push:
+  workflow_dispatch:
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      # Fix storage uploading
+      - uses: actions/checkout@v1
+
+      # Lighthouse runs
+      - name: Audit URLs using Lighthouse
+        id: lighthouse_audit
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          urls: |
+            ${{env.LINK}}
+          uploadArtifacts: false
+          temporaryPublicStorage: true
+          runs: 5
+
+      # Formatting code for pull comment
+      - name: Format lighthouse score
+        id: format_lighthouse_score
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const lighthouseCommentMaker = require('./scripts/lighthouseCommentMaker.js');
+
+            const lighthouseOutputs = {
+              manifest: ${{ steps.lighthouse_audit.outputs.manifest }},
+              links: ${{ steps.lighthouse_audit.outputs.links }}
+            };
+
+            const comment = lighthouseCommentMaker({ lighthouseOutputs });
+            core.setOutput("comment", comment);
+
+      # Ad dcomment to pull request
+      - name: Add Lighthouse stats as comment
+        id: comment_to_pr
+        uses: marocchino/sticky-pull-request-comment@v2.0.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          header: lighthouse
+          message: ${{ steps.format_lighthouse_score.outputs.comment }}
+
+      # Show report links
+      - name: 🎉 Report results generated
+        run: |
+          echo "${{ steps.format_lighthouse_score.outputs.comment }}"
+          echo ${{ fromJson(steps.lighthouse_audit.outputs.links)[env.LINK] }}
