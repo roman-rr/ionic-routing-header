@@ -1,0 +1,49 @@
+# Production build for iOS
+name: Production builds
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build-ios-android:
+    # The type of runner that the job will run on
+    runs-on: macOS-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Install cordova cli
+      - name: Install cordova cli
+        run: sudo npm install -g cordova
+
+      # Install cordova-res cli
+      - name: Install cordova-res cli
+        run: sudo npm i cordova-res --unsafe-perm=true -g
+        
+      # Install ionic cli
+      - name: Install ionic cli
+        run: sudo npm install -g @ionic/cli
+
+      # Install npm packages
+      - name: Install npm packages
+        run: npm install
+        
+      # Run iOS build
+      - name: Run iOS build
+        run: ionic cordova build ios --prod
+
+      # Run Android build
+      - name: Run Android build
+        run: ionic cordova build android --prod
